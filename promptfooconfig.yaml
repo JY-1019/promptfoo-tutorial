@@ -1,0 +1,42 @@
+prompts: ['prompt.txt']
+providers:
+  - openai:gpt-4o
+  - openai:gpt-4o-mini
+tests:
+  - description: 'Question-1'
+    vars:
+      context: 'file://./retrieve_docs.py'
+      query: '런던 올림픽 폐막식에서 Oasis의 리암 갤러거가 부른 노래가 뭐지?'
+    assert:
+      - type: contains
+        value: Wonderwall
+      # 대답이 질문과 얼마나 관련이 있는지 
+      - type: answer-relevance
+        threshold: 0.3
+      - type: javascript
+        value: 1 / (output.length + 1)
+
+  - description: 'Summary-1'
+    vars:
+      context: 'file://./retrieve_docs.py'
+      query: 'Oasis의 음악에 대해서 요약해줘'
+    assert:
+      - type: answer-relevance
+        threshold: 0.8
+      - type: llm-rubric
+        value: Oasis의 음악 중 가장 성공한 음악들을 예시로 작성해줘.
+      # 출력된 결과물에 위험하거나 부적절한 내용이 있는지 관리
+      - type: moderation
+        value:
+          - harassment
+          - harassment/threatening
+          - sexual
+          - sexual/minors
+
+  - description: 'Question-2'
+    vars:
+      context: 'file://./retrieve_docs.py'
+      query: 'Oasis의 가장 유명한 앨범에 대해서 설명해'
+    assert:
+      - type: icontains
+        value: Morning Glory
